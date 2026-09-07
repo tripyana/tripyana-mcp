@@ -1,0 +1,11 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.tripyana/london-chauffeur",
+  "title": "Tripyana London Chauffeur",
+  "description": "Fixed London chauffeur prices: airport & cruise transfers, hourly hire, day trips, booking links.",
+  "version": "1.0.0",
+  "websiteUrl": "https://mcp.tripyana.com/public",
+  "remotes": [
+    { "type": "streamable-http", "url": "https://mcp.tripyana.com/public" }
+  ]
+}

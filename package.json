@@ -1,0 +1,15 @@
+{
+  "name": "tripyana-mcp",
+  "version": "1.0.0",
+  "description": "Public MCP server for Tripyana — fixed London chauffeur prices (airport & cruise transfers, hourly hire, day trips) and pre-filled booking links for AI agents.",
+  "type": "module",
+  "main": "src/server.js",
+  "bin": { "tripyana-mcp": "src/server.js" },
+  "scripts": { "start": "node src/server.js", "test": "node test/smoke.mjs" },
+  "keywords": ["mcp", "model-context-protocol", "mcp-server", "london", "chauffeur", "airport-transfer", "heathrow", "gatwick", "travel", "cruise", "tripyana"],
+  "author": "Tripyana Ltd <info@tripyana.com> (https://tripyana.com/)",
+  "license": "MIT",
+  "homepage": "https://mcp.tripyana.com/public",
+  "engines": { "node": ">=20" },
+  "dependencies": { "@modelcontextprotocol/sdk": "^1.30.0", "zod": "^4.5.4" }
+}
