@@ -54,7 +54,7 @@ Resources: `tripyana://llms.txt` (the live catalogue, also at [tripyana.com/llms
 ## Run it yourself
 
 ```bash
-git clone https://github.com/tripyana/tripyana-mcp && cd tripyana-mcp
+git clone https://github.com/mam16600-glitch/tripyana-mcp && cd tripyana-mcp
 npm install && npm start          # http://127.0.0.1:8791/mcp
 npm test                          # smoke test against the local server
 ```
