@@ -41,6 +41,7 @@ claude mcp add --transport http tripyana https://mcp.tripyana.com/public
 | `list_day_trips` | Every private day trip from London with whole-car return prices and links (English or Arabic) |
 | `search_services` | Finds the right Tripyana page for a query, with summary and published prices |
 | `get_booking_link` | Builds a booking-form URL with date, time, passengers, pickup, drop-off and contact details pre-filled |
+| `get_meet_greet_price` | Heathrow VIP Meet & Assist with the Fast Track lane (£350 for two guests, £475 with hotel transfer) and student / unaccompanied-minor pickup at any London airport |
 | `get_company_info` | Licence, address, phone/WhatsApp, languages, what every fare includes, cancellation policy |
 
 Resources: `tripyana://llms.txt` (the live catalogue, also at [tripyana.com/llms.txt](https://tripyana.com/llms.txt)) and `tripyana://prices.json`.

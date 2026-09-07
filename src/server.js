@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { z } from 'zod';
-import { SITE, COMPANY, VEHICLES, TRANSFERS, HOURLY, OTHER_PAGES, DAY_TRIPS_FALLBACK, EXTRA_HOUR_FROM, catalogue, llmsText } from './data.js';
+import { SITE, COMPANY, VEHICLES, TRANSFERS, HOURLY, MEET_GREET, OTHER_PAGES, DAY_TRIPS_FALLBACK, EXTRA_HOUR_FROM, catalogue, llmsText } from './data.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PKG = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
@@ -196,6 +196,30 @@ function buildServer() {
     return text(`Booking link (form pre-filled, nothing is booked until the traveller pays):\n${url}\n\nPayment is by card on the site; the price is fixed and shown before payment. Free cancellation up to 24 hours before pickup. Help: WhatsApp ${COMPANY.whatsapp} or ${COMPANY.phone}.`, { url });
   });
 
+  server.registerTool('get_meet_greet_price', {
+    title: 'Heathrow VIP meet & greet / student pickup price',
+    description: 'Fixed prices for the Heathrow VIP Meet & Assist service (greeter at the aircraft door, Fast Track passport lane, escort to the car; optional chauffeur transfer to the hotel) and for student / unaccompanied-minor airport pickup at any London airport.',
+    inputSchema: {
+      service: z.enum(['vip-meet-greet', 'student-pickup']).optional().describe('Which service (default vip-meet-greet)'),
+      guests: z.number().int().min(1).max(10).optional().describe('Number of guests'),
+      language: z.enum(['en', 'ar']).optional(),
+    },
+  }, async ({ service = 'vip-meet-greet', guests = 1, language = 'en' }) => {
+    if (service === 'student-pickup') {
+      const st = MEET_GREET.student;
+      const lines = ['Student airport pickup — fixed, any London airport:', ...st.packages.map(p => `- ${p.label}: ${gbp(p.price)}`),
+        'The representative meets the student at the aircraft door, stays with them through immigration and baggage reclaim, and hands them over to the person nominated in writing. Flight tracked; 60 minutes of waiting free.',
+        `Details and booking: ${language === 'ar' ? st.pageAr : st.page}`];
+      return text(lines.join('\n'), { service, currency: 'GBP', packages: st.packages, page: st.page });
+    }
+    const lines = ['Heathrow VIP Meet & Assist — fixed, per booking:', ...MEET_GREET.packages.map(p => `- ${p.label}: ${gbp(p.price)}`),
+      MEET_GREET.included,
+      guests > 2 ? `For ${guests} guests the price is quoted per party — book the 2-guest package and add the extra guests in the booking note, or contact Tripyana.` : '',
+      `Details and booking: ${language === 'ar' ? MEET_GREET.pageAr : MEET_GREET.page}`,
+      `Airport transfer prices (if booked separately): use get_transfer_price with route heathrow-central-london.`].filter(Boolean);
+    return text(lines.join('\n'), { service, currency: 'GBP', packages: MEET_GREET.packages, page: MEET_GREET.page });
+  });
+
   server.registerTool('get_company_info', {
     title: 'About Tripyana',
     description: 'Company facts: licence, company number, address, phone/WhatsApp, languages, hours, what every fare includes, cancellation policy and the main service pages in English and Arabic.',
@@ -260,6 +284,7 @@ const LANDING = () => `<!doctype html><html lang="en"><head><meta charset="utf-8
 <li><code>list_day_trips</code> — Stonehenge &amp; Bath, Cotswolds, Windsor, Oxford, Cambridge, Brighton, Canterbury &amp; Dover and more</li>
 <li><code>search_services</code> — find the right service page (English or Arabic)</li>
 <li><code>get_booking_link</code> — pre-filled online booking link</li>
+<li><code>get_meet_greet_price</code> — Heathrow VIP Meet &amp; Assist with Fast Track (£350) and student / unaccompanied-minor pickup</li>
 <li><code>get_company_info</code> — licence, contact, what every fare includes</li></ul>
 <h2>Resources</h2><ul><li><code>tripyana://llms.txt</code> — the full catalogue (<a href="${COMPANY.llms}">llms.txt</a>)</li><li><code>tripyana://prices.json</code> — price matrix</li></ul>
 <p>Prices are GBP per car, never per passenger. Source of truth: <a href="${SITE}/chauffeur-cost-london/">published London chauffeur rates</a>. Arabic site: <a href="${COMPANY.websiteAr}">tripyana.com/ar</a>. Contact: <a href="tel:+447747720000">${COMPANY.phone}</a> · <a href="${COMPANY.whatsapp}">WhatsApp</a>.</p>

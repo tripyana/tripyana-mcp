@@ -21,6 +21,8 @@ const calls = [
   ['search_services', { query: 'meet and greet heathrow', language: 'en' }],
   ['search_services', { query: 'كروز ساوثهامبتون' }],
   ['get_booking_link', { date: '2026-10-05', time: '14:30', passengers: 3, pickup: 'Heathrow Terminal 5', pickup_latlng: '51.4700,-0.4543', dropoff: 'The Savoy, London', first_name: 'Test', note: 'BA123' }],
+  ['get_meet_greet_price', { guests: 2 }],
+  ['get_meet_greet_price', { service: 'student-pickup', language: 'ar' }],
   ['get_company_info', {}],
 ];
 const init = await rpc('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'smoke', version: '1' } });

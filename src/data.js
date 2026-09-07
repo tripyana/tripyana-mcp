@@ -107,6 +107,26 @@ export const HOURLY = {
   },
 };
 
+// Heathrow VIP meet & greet and student pickup (fixed, per booking).
+export const MEET_GREET = {
+  page: `${SITE}/london/heathrow-vip-meet-greet-fast-track/`,
+  pageAr: `${SITE}/ar/london/heathrow-vip-meet-greet-fast-track/`,
+  bookingPage: `${SITE}/london/heathrow-vip-meet-greet-fast-track/`,
+  packages: [
+    { key: 'meet-assist', label: 'VIP Meet & Assist + Fast Track lane at Heathrow (up to 2 guests, Terminals 2/3/4/5)', price: 350 },
+    { key: 'premium-with-transfer', label: 'VIP Premium: Meet & Assist + Fast Track + chauffeur transfer to your London hotel (up to 2 guests)', price: 475 },
+  ],
+  included: 'A personal greeter meets you at the aircraft door with a name board, escorts you through the Fast Track lane at passport control, stays with you through baggage reclaim and walks you to your car. Booked in advance, flight tracked. The greeter speaks English.',
+  student: {
+    page: `${SITE}/london/student-airport-pickup/`,
+    pageAr: `${SITE}/ar/london/student-airport-pickup/`,
+    packages: [
+      { key: 'student', label: 'Student pickup at the aircraft door, any London airport, handed to the person you nominate', price: 300 },
+      { key: 'unaccompanied-minor', label: 'Unaccompanied minor pickup at the aircraft door, any London airport', price: 400 },
+    ],
+  },
+};
+
 export const OTHER_PAGES = {
   meetGreet: `${SITE}/london/heathrow-vip-meet-greet-fast-track/`,
   studentPickup: `${SITE}/london/student-airport-pickup/`,
