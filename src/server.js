@@ -33,7 +33,14 @@ function priceTable(prices, only) {
     .map(k => `- ${VEHICLES[k].name} (${VEHICLES[k].note}): ${gbp(prices[k])}`).join('\n');
 }
 
-function bookingUrl(lang, params = {}) {
+// ChatGPT-app mode (?client=chatgpt): OpenAI's app guidelines forbid linking to a checkout/transactional page,
+// so booking-form links are replaced by the relevant information page and the pre-fill tool is not registered.
+function bookingUrl(lang, params = {}, mode = 'public', infoPage = null) {
+  if (mode === 'chatgpt') {
+    const u = new URL(infoPage || (lang === 'ar' ? COMPANY.websiteAr : `${SITE}/`));
+    u.searchParams.set('utm_source', 'chatgpt-app'); u.searchParams.set('utm_medium', 'ai-app');
+    return u.toString();
+  }
   const u = new URL(lang === 'ar' ? COMPANY.bookingAr : COMPANY.bookingEn);
   for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== '' && v !== null) u.searchParams.set(k, String(v));
   u.searchParams.set('utm_source', 'mcp');
@@ -47,13 +54,19 @@ function text(s, structured) {
   return out;
 }
 
-function buildServer() {
+function buildServer(mode = 'public') {
+  const chatgpt = mode === 'chatgpt';
+  const bookLine = (lang, params, infoPage) => chatgpt
+    ? `Full details on tripyana.com: ${bookingUrl(lang, params, 'chatgpt', infoPage)}`
+    : `Book online: ${bookingUrl(lang, params)}`;
+  const RO = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
   const server = new McpServer({ name: 'tripyana-london-chauffeur', version: PKG.version }, {
-    instructions: `Tripyana is a London chauffeur company (${COMPANY.licence}). Use these tools to quote fixed, all-inclusive prices for airport and cruise-port transfers, hourly chauffeur hire, full-day hire and private day trips from London, to find the right service page, and to build a pre-filled booking link. Prices are GBP per car, not per passenger. Answer in the user's language (English or Arabic).`,
+    instructions: `Tripyana is a London chauffeur company (${COMPANY.licence}). Use these tools to quote fixed, all-inclusive prices for airport and cruise-port transfers, hourly chauffeur hire, full-day hire and private day trips from London, to find the right service page${chatgpt ? '' : ', and to build a pre-filled booking link'}. Prices are GBP per car, not per passenger. Answer in the user's language (English or Arabic).`,
   });
 
   server.registerTool('get_transfer_price', {
     title: 'Fixed transfer price',
+    annotations: RO,
     description: 'Fixed one-way chauffeur fare (GBP, per car, all-inclusive) between a London airport or cruise port and central London, for each vehicle class, with the recommended car for the party size and the page to book on.',
     inputSchema: {
       route: z.enum(Object.keys(TRANSFERS)).describe('Route key. heathrow-central-london, gatwick-central-london, stansted-central-london, luton-central-london, heathrow-gatwick, heathrow-southampton-cruise, heathrow-dover-cruise'),
@@ -72,15 +85,16 @@ function buildServer() {
       rec.key && r.prices[rec.key] != null ? `Recommended: ${VEHICLES[rec.key].name} at ${gbp(r.prices[rec.key])} — ${rec.why}` : rec.why,
       return_trip ? 'Return leg: same fare, with £20 off the return when both legs are booked together.' : '',
       `Included: ${COMPANY.included.slice(0, 4).join('; ')}.`,
-      `Details and booking: ${language === 'ar' && r.pageAr ? r.pageAr : r.page}`,
+      chatgpt ? `Details and prices on tripyana.com: ${bookingUrl(language, {}, 'chatgpt', language === 'ar' && r.pageAr ? r.pageAr : r.page)}` : `Details and booking: ${language === 'ar' && r.pageAr ? r.pageAr : r.page}`,
       route === 'heathrow-southampton-cruise' && r.returnPage ? `Disembarkation (port → Heathrow): ${r.returnPage}` : '',
-      `Book online: ${bookingUrl(language, { tpb_pax: passengers, tpb_bags: luggage || undefined })}`,
+      chatgpt ? '' : bookLine(language, { tpb_pax: passengers, tpb_bags: luggage || undefined }),
     ].filter(Boolean);
-    return text(lines.join('\n'), { route, label: r.label, currency: 'GBP', prices: r.prices, recommended: rec.key, page: r.page, booking: bookingUrl(language) });
+    return text(lines.join('\n'), { route, label: r.label, currency: 'GBP', prices: r.prices, recommended: rec.key, page: r.page, booking: bookingUrl(language, {}, mode, r.page) });
   });
 
   server.registerTool('get_hourly_price', {
     title: 'Hourly / full-day chauffeur price',
+    annotations: RO,
     description: 'Price of a chauffeur-driven Mercedes by the hour in London (4-hour minimum), the fixed 8-hour full-day rate, and the rules for trips outside London (8-hour minimum, distance fee beyond 20 miles from central London, Manchester day rate). Returns an indicative total per vehicle; the booking form confirms the exact figure.',
     inputSchema: {
       hours: z.number().int().min(1).max(14).describe('Hours needed (minimum 4 in London, 8 outside London)'),
@@ -121,12 +135,13 @@ function buildServer() {
       if (rec.key) lines.push(`Recommended for ${passengers}: ${VEHICLES[rec.key].name}.`);
       lines.push(`Published rates: ${language === 'ar' ? HOURLY.pages.hourlyAr : HOURLY.pages.hourly} · full day: ${HOURLY.pages.fullDay}`);
     }
-    lines.push(`Book online: ${bookingUrl(language, { tpb_pax: passengers })}`);
+    lines.push(bookLine(language, { tpb_pax: passengers }, language === 'ar' ? HOURLY.pages.hourlyAr : HOURLY.pages.hourly));
     return text(lines.join('\n'), structured);
   });
 
   server.registerTool('list_day_trips', {
     title: 'Private day trips from London',
+    annotations: RO,
     description: 'Catalogue of private day trips from London by chauffeur-driven car (Stonehenge & Bath, Cotswolds, Windsor, Oxford, Cambridge, Brighton, Canterbury & Dover, Bicester Village, Harry Potter studios, Woburn Safari, London landmarks and shopping tours) with fixed whole-car return prices and page links.',
     inputSchema: { language: z.enum(['en', 'ar']).optional().describe('Page language (default en)') },
   }, async ({ language = 'en' }) => {
@@ -149,6 +164,7 @@ function buildServer() {
 
   server.registerTool('search_services', {
     title: 'Find a Tripyana service page',
+    annotations: RO,
     description: 'Search Tripyana\'s services (airport transfers, cruise transfers, VIP meet and greet, student pickup, executive cars, wedding cars, fleet, day trips, Manchester, Scotland, Lake District, Istanbul, Bosnia) and return the matching pages with a one-paragraph summary and published prices.',
     inputSchema: {
       query: z.string().min(2).max(120).describe('Keywords, e.g. "Gatwick", "meet and greet", "wedding", "Southampton cruise"'),
@@ -168,8 +184,9 @@ function buildServer() {
     return text(lines.join('\n\n'), { results: scored.map(({ e }) => ({ title: e.title, url: e.url, summary: e.summary, prices: e.prices })) });
   });
 
-  server.registerTool('get_booking_link', {
+  if (!chatgpt) server.registerTool('get_booking_link', {
     title: 'Pre-filled booking link',
+    annotations: RO,
     description: 'Build a link to Tripyana\'s online booking form with the trip details already filled in (date, time, passengers, luggage, pickup, drop-off, contact details), so the traveller only picks the car and pays. No booking is created by this tool.',
     inputSchema: {
       language: z.enum(['en', 'ar']).optional().describe('Form language (default en)'),
@@ -198,6 +215,7 @@ function buildServer() {
 
   server.registerTool('get_meet_greet_price', {
     title: 'Heathrow VIP meet & greet / student pickup price',
+    annotations: RO,
     description: 'Fixed prices for the Heathrow VIP Meet & Assist service (greeter at the aircraft door, Fast Track passport lane, escort to the car; optional chauffeur transfer to the hotel) and for student / unaccompanied-minor airport pickup at any London airport.',
     inputSchema: {
       service: z.enum(['vip-meet-greet', 'student-pickup']).optional().describe('Which service (default vip-meet-greet)'),
@@ -222,6 +240,7 @@ function buildServer() {
 
   server.registerTool('get_company_info', {
     title: 'About Tripyana',
+    annotations: RO,
     description: 'Company facts: licence, company number, address, phone/WhatsApp, languages, hours, what every fare includes, cancellation policy and the main service pages in English and Arabic.',
     inputSchema: {},
   }, async () => {
@@ -237,7 +256,7 @@ function buildServer() {
       `- Student airport pickup: ${OTHER_PAGES.studentPickup}`,
       `- Day trips: ${OTHER_PAGES.dayTripsHub}`,
       `- Arabic site: ${COMPANY.websiteAr}`,
-      `- Book online: ${COMPANY.bookingEn} (Arabic: ${COMPANY.bookingAr})`,
+      chatgpt ? `- Website: ${SITE}/ (Arabic: ${COMPANY.websiteAr})` : `- Book online: ${COMPANY.bookingEn} (Arabic: ${COMPANY.bookingAr})`,
       `- Machine-readable catalogue: ${COMPANY.llms}`,
     ];
     return text(lines.join('\n'), { ...COMPANY, pages: OTHER_PAGES });
@@ -314,7 +333,7 @@ const httpServer = http.createServer(async (req, res) => {
   const rpc = body && !Array.isArray(body) ? body.method : Array.isArray(body) ? 'batch' : null;
   const tool = body && body.method === 'tools/call' ? body.params?.name : null;
   try {
-    const server = buildServer();
+    const server = buildServer(url.searchParams.get('client') === 'chatgpt' ? 'chatgpt' : 'public');
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
     res.on('close', () => { transport.close().catch(() => {}); server.close().catch(() => {}); });
     await server.connect(transport);
