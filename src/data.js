@@ -54,13 +54,13 @@ export const TRANSFERS = {
   'stansted-central-london': {
     label: 'Stansted Airport ↔ Central London', prices: { 'e-class': 185, 'v-class': 215, 's-class': 275, 'range-rover': 360 },
     page: `${SITE}/london/london-airport-transfer/stansted-to-london-transfer/`,
-    pageAr: `${SITE}/ar/london/london-airport-transfer/stansted-to-london-transfer/`,
+    pageAr: `${SITE}/ar/london/london-airport-transfer/stansted-airport-private-driver/`,
     duration: '60–90 minutes',
   },
   'luton-central-london': {
     label: 'Luton Airport ↔ Central London', prices: { 'e-class': 185, 'v-class': 215, 's-class': 275, 'range-rover': 360 },
     page: `${SITE}/london/london-airport-transfer/luton-airport-transfer-to-london/`,
-    pageAr: `${SITE}/ar/london/london-airport-transfer/luton-airport-transfer-to-london/`,
+    pageAr: `${SITE}/ar/london/london-airport-transfer/luton-airport-private-driver/`,
     duration: '60–90 minutes',
   },
   'heathrow-gatwick': {
@@ -100,7 +100,7 @@ export const HOURLY = {
     hourlyAr: `${SITE}/ar/london/hourly-chauffeur/`,
     fullDay: `${SITE}/london/luxury-car-hire-london/`,
     hireCar: `${SITE}/london/hire-car-with-driver-in-london/`,
-    hireCarAr: `${SITE}/ar/london/hire-car-with-driver-in-london/`,
+    hireCarAr: `${SITE}/ar/london/private-driver-london/`,
     executive: `${SITE}/london/executive-car-service-london/`,
     manchester: `${SITE}/london-to-manchester-chauffeur/`,
     scotland: `${SITE}/scotland-tour-from-london/`,
@@ -110,7 +110,7 @@ export const HOURLY = {
 // Heathrow VIP meet & greet and student pickup (fixed, per booking).
 export const MEET_GREET = {
   page: `${SITE}/london/heathrow-vip-meet-greet-fast-track/`,
-  pageAr: `${SITE}/ar/london/heathrow-vip-meet-greet-fast-track/`,
+  pageAr: `${SITE}/ar/london/heathrow-vip-arrival-reception/`,
   bookingPage: `${SITE}/london/heathrow-vip-meet-greet-fast-track/`,
   packages: [
     { key: 'meet-assist', label: 'VIP Meet & Assist + Fast Track lane at Heathrow (up to 2 guests, Terminals 2/3/4/5)', price: 350 },
@@ -119,7 +119,7 @@ export const MEET_GREET = {
   included: 'A personal greeter meets you at the aircraft door with a name board, escorts you through the Fast Track lane at passport control, stays with you through baggage reclaim and walks you to your car. Booked in advance, flight tracked. The greeter speaks English.',
   student: {
     page: `${SITE}/london/student-airport-pickup/`,
-    pageAr: `${SITE}/ar/london/student-airport-pickup/`,
+    pageAr: `${SITE}/ar/london/students-airport-arrival-private-car/`,
     packages: [
       { key: 'student', label: 'Student pickup at the aircraft door, any London airport, handed to the person you nominate', price: 300 },
       { key: 'unaccompanied-minor', label: 'Unaccompanied minor pickup at the aircraft door, any London airport', price: 400 },

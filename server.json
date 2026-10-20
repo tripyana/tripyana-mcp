@@ -3,8 +3,8 @@
   "name": "com.tripyana/london-chauffeur",
   "title": "Tripyana London Chauffeur",
   "description": "Fixed London chauffeur prices: airport & cruise transfers, hourly hire, day trips, booking links.",
-  "version": "1.2.0",
-  "websiteUrl": "https://mcp.tripyana.com/public",
+  "version": "1.2.1",
+  "websiteUrl": "https://tripyana.com/",
   "remotes": [
     {
       "type": "streamable-http",
